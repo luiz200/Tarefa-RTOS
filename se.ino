@@ -1,5 +1,5 @@
-# include <freertos/FreeRTOS.h>
-# include <freertos/task.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <freertos/queue.h>
 #include <esp_random.h>
 
@@ -54,8 +54,6 @@ void taskControlLed(void *pvParameters) {
       xSemaphoreTake(voltageSemaphore, portMAX_DELAY);
       
       if (voltage > 1.5) {
-        //Serial.print("chegou acendendo led: ");
-        //Serial.println(voltage);
         digitalWrite(ledPin2, HIGH);
       } else {
         digitalWrite(ledPin2, LOW);
@@ -68,16 +66,12 @@ void taskControlLed(void *pvParameters) {
 }
 
 void intReadingsTimerCallback(TimerHandle_t xTimer) {
-  //Serial.print("Lendo o valor: ");
+  
   int sensorValue = analogRead(analogPin);
-  //Serial.println(sensorValue);
-  //xSemaphoreTake(voltageSemaphore, portMAX_DELAY);
   xQueueSend(queueIntReadings, &sensorValue, 0);
-  //xSemaphoreGive(voltageSemaphore);
 }
 
 // Funções das tarefas
-
 
 void setup() {
   Serial.begin(115200);
@@ -92,16 +86,14 @@ void setup() {
   voltageSemaphore = xSemaphoreCreateMutex();
 
   // Criando as tarefas
-  // Daber se precisa mapear
-  //xTaskCreatePinnedToCore(taskIntReadings, "TaskIntReadings", 10000, NULL, 1, NULL, 1);
   xTaskCreatePinnedToCore(taskIntToVoltage, "TaskIntToVoltage", 1024, NULL, 1, NULL, 0);
   xTaskCreatePinnedToCore(taskPlotVoltage, "TaskPlotVoltage", 1024, NULL, 1, NULL, 1);
   xTaskCreatePinnedToCore(taskControlLed, "TaskControlLed", 1024, NULL, 1, NULL, 1);
 
   // Inicializando o temporizador
   intReadingsTimer = xTimerCreate("IntReadingsTimer", pdMS_TO_TICKS(300), pdTRUE, (void *)0, intReadingsTimerCallback);
-  //xTimerStart(intReadingsTimer, portMAX_DELAY);
   xTimerStart(intReadingsTimer, portMAX_DELAY);
+
 }
 
 void loop() {
